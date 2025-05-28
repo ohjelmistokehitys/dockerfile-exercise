@@ -56,7 +56,7 @@ We recommend referring to the [Dockerfile reference documentation](https://docs.
 >  CMD ["trunk", "serve", "--address", "0.0.0.0"]
 > ```
 
-> [!HINT]
+> [!TIP]
 > Take note about when each instruction should be executed. For example, building the application should happen in the build phase using `RUN` instructions, while running the application should be done in the run phase using `CMD` (or `ENTRYPOINT`) instructions.
 
 
