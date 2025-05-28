@@ -38,7 +38,29 @@ This repository contains a [Dockerfile](./Dockerfile) that you will use to build
 
 Dockerfiles are used to create container images, which are the executable packages that contain everything needed to run an application, including the code, runtime, libraries, and dependencies.
 
-Images are based on base images, which provide the operating system and other necessary components. In this exercise, we recommend using the official [Rust base image](https://hub.docker.com/_/rust) as the base image, as it contains the necessary command line tools `rustup`, `cargo` and `trunk`. The use of these tools is described in the [Sanuli readme](./sanuli/README.md).
+Images are based on base images, which provide the operating system and other necessary components. In this exercise, we recommend using the official [Rust base image](https://hub.docker.com/_/rust) as the base image, as it already contains the necessary command line tools:
+
+* [`rustup` for toolchain management](https://www.rust-lang.org/tools/install).
+* [`cargo` for package management](https://doc.rust-lang.org/cargo/).
+* Sanuli also uses the [`trunk` web application bundler](https://github.com/trunk-rs/trunk), which is installed with `cargo`.
+
+The [Sanuli readme file](./sanuli/README.md) already contains all the commands needed to build and run the application. Note that you don't need to install Rust, if you use a base image with Rust already installed.
+
+Further steps in creating the Dockerfile include applying the `WORKDIR`, `COPY`, `RUN`, `EXPOSE` and `CMD` instruction. These instructions are described in practically every Docker tutorial and they are typically used very similarly regardless of the technology being used, so there are lots of resources to utilize. Take note of the quick start instructions in the Sanuli readme and apply them in the Dockerfile.
+
+We recommend referring to the [Dockerfile reference documentation](https://docs.docker.com/reference/dockerfile/) for a detailed explanation of each instruction. The [Docker workshop (docker.com)](https://docs.docker.com/get-started/workshop/) also provides a good introduction to Dockerfiles and how to use them.
+
+Take note about when each instruction should be executed. For example, building the application should happen in the build phase using `RUN` instructions, while running the application should be done in the run phase using `CMD` (or `ENTRYPOINT`) instructions.
+
+## Running the containerized application
+
+
+## Ignoring files with `.dockerignore`
+
+The container seems to be running nicely, but there are some files in there that we would not like to copy into the container. Typically such files include local build artifacts or *npm_modules* that are not needed in the container. In Sanuli's case, we would like to ignore the README.md file.
+
+You can use a `.dockerignore` file to specify which files and directories should be ignored when building the Docker image. Add a `.dockerignore` file to the alongside your Dockerfile and add the `README.md` file to it. Then add and commit your changes to the repository.
+
 
 ## Submitting your work
 
