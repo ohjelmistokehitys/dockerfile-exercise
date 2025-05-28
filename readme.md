@@ -34,26 +34,84 @@ If you want to learn more about Git submodules, we recommend watching the video 
 
 ## Creating the Dockerfile
 
-This repository contains a [Dockerfile](./Dockerfile) that you will use to build the Docker image for Sanuli. The Dockerfile is a text file that contains instructions for building a Docker image.
+This repository contains an empty [Dockerfile](./Dockerfile) that you will use to build the Docker image for Sanuli. The Dockerfile is a text file that contains instructions for building a Docker image. Docker images are the executable packages that contain everything needed to run an application, including the code, runtime, libraries, and dependencies.
 
-Dockerfiles are used to create container images, which are the executable packages that contain everything needed to run an application, including the code, runtime, libraries, and dependencies.
-
-Images are based on base images, which provide the operating system and other necessary components. In this exercise, we recommend using the official [Rust base image](https://hub.docker.com/_/rust) as the base image, as it already contains the necessary command line tools:
+Images are based on base images, which provide the operating system and other necessary components. In this exercise, we recommend using the official [Rust base image](https://hub.docker.com/_/rust) as the base image, as it already contains the necessary command line tools, including:
 
 * [`rustup` for toolchain management](https://www.rust-lang.org/tools/install).
 * [`cargo` for package management](https://doc.rust-lang.org/cargo/).
 * Sanuli also uses the [`trunk` web application bundler](https://github.com/trunk-rs/trunk), which is installed with `cargo`.
 
-The [Sanuli readme file](./sanuli/README.md) already contains all the commands needed to build and run the application. Note that you don't need to install Rust, if you use a base image with Rust already installed.
+The [Sanuli readme file](./sanuli/README.md) contains all the commands needed to build and run the application. Note that you don't need to install Rust, if you use a base image with Rust already installed. Note that the repository does not contain word lists, which you will need to prepare yourself, if you wish to actually play the game.
 
-Further steps in creating the Dockerfile include applying the `WORKDIR`, `COPY`, `RUN`, `EXPOSE` and `CMD` instruction. These instructions are described in practically every Docker tutorial and they are typically used very similarly regardless of the technology being used, so there are lots of resources to utilize. Take note of the quick start instructions in the Sanuli readme and apply them in the Dockerfile.
+Further steps in creating the Dockerfile include applying the [`WORKDIR`, `COPY`, `RUN`, `EXPOSE` and `CMD` instructions](https://docs.docker.com/reference/dockerfile/). These instructions are described in practically every Docker tutorial and they are typically used very similarly regardless of the technology being used, so there are lots of resources to utilize. Take note of the quick start instructions in the Sanuli readme and apply them in the Dockerfile.
 
 We recommend referring to the [Dockerfile reference documentation](https://docs.docker.com/reference/dockerfile/) for a detailed explanation of each instruction. The [Docker workshop (docker.com)](https://docs.docker.com/get-started/workshop/) also provides a good introduction to Dockerfiles and how to use them.
 
-Take note about when each instruction should be executed. For example, building the application should happen in the build phase using `RUN` instructions, while running the application should be done in the run phase using `CMD` (or `ENTRYPOINT`) instructions.
+> [!IMPORTANT]
+> By default, the `trunk` development server listens **only to the localhost interface**. When running inside a Docker container, this means that the app won't accept connections from the host system. To allow connections from the host, you need to specify the `--address` option when running the `trunk serve` command in the Dockerfile:
+>
+> ```dockerfile
+>  # listens to all interfaces (0.0.0.0)
+>  CMD ["trunk", "serve", "--address", "0.0.0.0"]
+> ```
+
+> [!HINT]
+> Take note about when each instruction should be executed. For example, building the application should happen in the build phase using `RUN` instructions, while running the application should be done in the run phase using `CMD` (or `ENTRYPOINT`) instructions.
+
+
+## Building the Docker image
+
+Once you have either completed or at least added a few first lines to the Dockerfile, you can build the Docker image. To do this, run the following command in the terminal from the root of your repository:
+
+```bash
+# run build in current folder "." and tag the image as "sanuli"
+docker build --tag sanuli .
+```
+
+> [!NOTE]
+> The first time you install the dependencies in the build phase, it can take a long time. However, [Docker caches the layers of the image](https://docs.docker.com/build/cache/), so subsequent builds will be faster. It is a good practice to organize the instructions in the Dockerfile so that the layers that change less frequently or are slower to execute are placed earlier in the file.
+
 
 ## Running the containerized application
 
+Once the image is built, you can run the application in a container. As the app is a web application, you will need to expose the port on which the application is running. By default, Sanuli runs on port 8080, so you will need to map that port to a port on your host system. To do this, run the following command in the terminal:
+
+```bash
+# Run the container and map port 8080 in the container to port 8080 on the host.
+# `--rm` option removes the container automatically after it is stopped.
+docker run --rm --publish 127.0.0.1:8080:8080 sanuli
+```
+
+When the container is running, you can access the application in your web browser by navigating to [http://localhost:8080](http://localhost:8080). You should see the Sanuli game interface.
+
+> [!IMPORTANT]
+> By default, the `trunk` development server listens **only to the localhost interface**. When running inside a Docker container, this means that the app won't accept connections from the host system. To allow connections from the host, you need to specify the `--address` option when running the `trunk serve` command in the Dockerfile:
+>
+> ```dockerfile
+>  # listens to all interfaces (0.0.0.0)
+>  CMD ["trunk", "serve", "--address", "0.0.0.0"]
+> ```
+>
+> When publishing the port, you can specify the host interface to which the port is mapped to. Use your host's `localhost` interface (`127.0.0.1`):
+>
+> ```bash
+> docker run --rm --publish 127.0.0.1:8080:8080 sanuli
+> ```
+
+
+## Adding word lists
+
+TODO
+
+
+## Multi stage builds
+
+As you have noticed at this point, building the Sanuli application requires quite a bunch of tools and dependencies. Use `docker image ls` to list the images on your system and see how large the image is. The size of the image is expected to be over 2 gigabytes, which is quite large for a relatively simple web application.
+
+In fact, the built application bundle is only a few megabytes in size, so next we should reduce the size of the image by using separate stages for building and running the application.
+
+TODO
 
 ## Ignoring files with `.dockerignore`
 
@@ -68,12 +126,29 @@ Add, commit and push your solutions to your repository to invoke the automated g
 
 Automated grading is implemented using GitHub actions and GitHub classroom. After each commit, you can see the autograding results as well as each test and their outputs in the *actions* tab under *Classroom Autograding Workflow*. You can push new solutions as many times as necessary until the deadline of the exercise.
 
+
 ## Optional: remove the container(s) and image(s)
 
-If you wish, you can remove the containers and images created during this exercise. Use the commands `docker container ls --all` and `docker image ls` to list all containers and images. You will need to stop and remove containers before you can remove the images. To remove a container, use the `docker container rm` command, and to remove an image, use the `docker image rm` command.
+Although Sanuli is a simple web app, the container is expected to be over 2 gigabytes in size, so it is a good idea to remove the container and image after you have completed the exercise. This will free up disk space on your system.
+
+Use the commands `docker container ls --all` and `docker image ls` to list all containers and images. You will need to stop and remove containers before you can remove the images. To remove a container, use the `docker container rm` command, and to remove an image, use the `docker image rm` command.
 
 * [`docker container` documentation](https://docs.docker.com/reference/cli/docker/container/)
 * [`docker image` documentation](https://docs.docker.com/reference/cli/docker/image/)
+
+
+## Licenses
+
+### Sanuli
+
+Sanuli is created by [Jaakko Husso](https://github.com/Cadiac) and licensed under the [MIT license](https://github.com/Cadiac/sanuli/blob/master/LICENSE).
+
+
+### Word list by the institute for the languages of Finland (Kotimaisten kielten keskus)
+
+The word list typically used in the Sanuli game is a Finnish word list provided by the [Kotimaisten kielten keskus](https://kotus.fi/), the Institute for the Languages of Finland.
+
+The word list is licensed under the [GNU LGPL](http://www.gnu.org/licenses/lgpl.html), [EUPL v.1.1](http://joinup.ec.europa.eu/software/page/eupl/licence-eupl) and [Creative Commons By 3.0](http://creativecommons.org/licenses/by/3.0/deed.fi) licenses, which allow you to use, modify and distribute the word list under certain conditions.
 
 
 ## About the exercise
