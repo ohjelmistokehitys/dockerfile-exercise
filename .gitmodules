@@ -1,0 +1,3 @@
+[submodule "sanuli"]
+	path = sanuli
+	url = https://github.com/Cadiac/sanuli.git

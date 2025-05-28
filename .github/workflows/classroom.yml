@@ -1,0 +1,89 @@
+name: Autograding Tests
+'on':
+- push
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Commands in Dockerfile (rustup)
+      id: commands-in-dockerfile-rustup
+      uses: classroom-resources/autograding-io-grader@v1
+      with:
+        test-name: Commands in Dockerfile (rustup)
+        setup-command: docker build --check .
+        command: cat Dockerfile
+        input: ''
+        expected-output: rustup
+        comparison-method: contains
+        timeout: 3
+        max-score: 15
+    - name: Commands in Dockerfile (cargo)
+      id: commands-in-dockerfile-cargo
+      uses: classroom-resources/autograding-io-grader@v1
+      with:
+        test-name: Commands in Dockerfile (cargo)
+        setup-command: docker build --check .
+        command: cat Dockerfile
+        input: ''
+        expected-output: cargo install
+        comparison-method: contains
+        timeout: 3
+        max-score: 15
+    - name: Commands in Dockerfile (trunk)
+      id: commands-in-dockerfile-trunk
+      uses: classroom-resources/autograding-io-grader@v1
+      with:
+        test-name: Commands in Dockerfile (trunk)
+        setup-command: docker build --check .
+        command: cat Dockerfile
+        input: ''
+        expected-output: trunk
+        comparison-method: contains
+        timeout: 3
+        max-score: 15
+    - name: Ignoring files
+      id: ignoring-files
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Ignoring files (sanuli/README.md)
+        setup-command: ''
+        command: cat .dockerignore
+        timeout: 1
+        max-score: 15
+    - name: Multi stage build (dev)
+      id: multi-stage-build-dev
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Multi stage build (dev)
+        setup-command: ''
+        command: docker build --check --target dev .
+        timeout: 3
+        max-score: 20
+    - name: Multi stage build (release)
+      id: multi-stage-build-release
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Multi stage build (release)
+        setup-command: ''
+        command: docker build --check --target release .
+        timeout: 3
+        max-score: 20
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        COMMANDS-IN-DOCKERFILE-RUSTUP_RESULTS: "${{steps.commands-in-dockerfile-rustup.outputs.result}}"
+        COMMANDS-IN-DOCKERFILE-CARGO_RESULTS: "${{steps.commands-in-dockerfile-cargo.outputs.result}}"
+        COMMANDS-IN-DOCKERFILE-TRUNK_RESULTS: "${{steps.commands-in-dockerfile-trunk.outputs.result}}"
+        IGNORING-FILES_RESULTS: "${{steps.ignoring-files.outputs.result}}"
+        MULTI-STAGE-BUILD-DEV_RESULTS: "${{steps.multi-stage-build-dev.outputs.result}}"
+        MULTI-STAGE-BUILD-RELEASE_RESULTS: "${{steps.multi-stage-build-release.outputs.result}}"
+      with:
+        runners: commands-in-dockerfile-rustup,commands-in-dockerfile-cargo,commands-in-dockerfile-trunk,ignoring-files,multi-stage-build-dev,multi-stage-build-release
