@@ -95,12 +95,17 @@ docker run --rm --publish 127.0.0.1:8080:8080 sanuli
 
 When the container is running, you can access the application in your web browser by navigating to [http://localhost:8080](http://localhost:8080). You should see the Sanuli game interface. If the connection is refused but there are no erros in the Docker logs, verify that you specified the server to listen to all interfaces by using the `--address` option in the `CMD` instruction of your Dockerfile, as described earlier.
 
+> [!NOTE]
+> Starting the application is likely produce a few warnings related to unused variables or unexpected conditions. These warnings are not errors, and they do not prevent the application from running.
 
 ## Step 4: Ignoring files with `.dockerignore`
 
-The container seems to be running nicely, but there are some files in there that we would not like to copy into the container. Typically such files include local build artifacts or *npm_modules* that are not needed in the container, or *.env* files, which contain your local environment variables. In Sanuli's case, we would like to exclude the *README.md* file from the container.
+The container seems to be running nicely, but there are some files in there that we would not like to copy into the container. Typically such files include local build artifacts or *node_modules* that are not needed in the container, or *.env* files, which contain your local environment variables. In Sanuli's case, we would like to exclude the *README.md* file from the container.
 
-Create a `.dockerignore` file to specify which files and directories should be ignored when building the Docker image. Add a `.dockerignore` file to the alongside your Dockerfile and add specify the `README.md` file in it. Then add and commit your changes to the repository.
+Your task is to create a `.dockerignore` file to specify which files and directories should be ignored when building the Docker image. Add a new `.dockerignore` file alongside your Dockerfile and add specify the `README.md` file under [sanuli/](./sanuli/) folder in it. Then add and commit your changes to the repository.
+
+> [!NOTE]
+> As the *README.md* file is in the subfolder, you can't just write the name `README.md` in the `.dockerignore` file. There are many ways you can refer to the file, either with a specific path or a pattern. See the [Docker documentation on .dockerignore files](https://docs.docker.com/build/concepts/context/#dockerignore-files) for options on how to exclude that file.
 
 
 ## Step 5: Multi stage Dockerfile
