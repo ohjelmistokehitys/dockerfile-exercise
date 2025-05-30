@@ -124,34 +124,41 @@ You will only need to make changes in the `builder-base` and `dev` stages, which
 
 ```dockerfile
 FROM rust:latest AS builder-base
-# This step has the steps required by all stages, such as installing dependencies.
+# This base step should have the instructions that are required by other stages,
+# such as installing dependencies.
 #
-# Move your previous COPY, RUN and WORKDIR instructions here, as they are needed
-# by all stages.
+# Move your previous COPY, RUN and WORKDIR instructions here, so they are completed
+# before the next stages. If the WORKDIR is set to something other than `/sanuli`,
+# make sure to update the COPY instruction in the release stage to match.
 #
-# Leave out the CMD instruction, as this stage is not meant to produce a runnable
-# application, but to prepare the environment.
+# You can leave out the CMD instruction, as this stage is not meant to produce a
+# runnable application, but to prepare a reusable environment.
+
 
 
 FROM builder-base AS dev
 # This stage is used for development, and it uses the previous builder-base as its
-# base. In here, add the EXPOSE and CMD instructions to expose the port and run the
-# development server.
+# base, so the code and dependencies are already in place. In here, add the
+# EXPOSE and CMD instructions from your initial solution to expose the port
+# and to start the development server.
+
 
 
 FROM builder-base AS build
 # In this stage, we will build the production artifacts. The stage uses the
-# same base as the dev stage, so the environment should be ready. We can
-# use a `RUN` instruction to build the application as described in the
-# Sanuli readme file.
+# same base as the dev stage, so the environment should be ready.
 #
-# In the readme, RUSTFLAGS are set on the same line as the `trunk build`
-# command, but here we have split them into two lines for clarity:
+# Here, we use a single RUN instruction to build the application as described in the
+# Sanuli readme file:
 ENV RUSTFLAGS="--cfg=web_sys_unstable_apis --remap-path-prefix \$HOME=~"
 RUN trunk build --release
 
-# No CMD instruction is needed here, as this stage will be used by the next stage,
-# that will actually run a web server.
+# (In the Sanuli readme, RUSTFLAGS are set on the same line as the `trunk build`
+# command, but above we split them into two lines for clarity.)
+
+# No CMD instruction is needed here, as there is no need to run a container
+# from this stage. Instead, we will copy the built artifacts to the next stage.
+
 
 
 FROM nginx:alpine AS release
@@ -159,17 +166,22 @@ FROM nginx:alpine AS release
 # See https://hub.docker.com/_/nginx for information about the nginx base image.
 #
 # Note that this stage is not based on the previous stages, which produced very
-# large images containing the Rust toolchain and development server. Instead, we only
-# copy the static files from the build stage, leaving out all unnecessary tools:
+# large images containing the Rust toolchain and development server. Instead, it
+# is based on a lightweight nginx image, which has nothing to do with Rust or
+# the previous development tools. This is the key to reducing the size of the
+# final image to just a few megabytes.
+#
+# Copy the static files from the build stage to the public directory of nginx:
 COPY --from=build /sanuli/dist /usr/share/nginx/html
 
 # Nginx listens to port 80 by default, so we expose that port:
 EXPOSE 80
 
-# The CMD instruction is not needed here, as the nginx base image already has a CMD
+# A CMD instruction is not needed here, as the nginx base image already has a CMD,
+# which will be inherited. The nginx server will start when this container is run.
 ```
 
-After these changes, you can build different images for development and production purposes. The development image will contain the Rust toolchain and the development server, while the production image will only contain the built static files and an nginx web server to serve them.
+After these changes, you can build different images for development and production purposes. The development image will contain the Rust toolchain and the development server, while the production image will only contain the built static files and an nginx web server to serve them to clients.
 
 
 ## Step 6: Building and running the multi-stage Dockerfile
@@ -177,10 +189,10 @@ After these changes, you can build different images for development and producti
 From now on, you can specify which stage you want to build by using the `--target` option in the `docker build` command. For example, to build the stage named as `dev` in the Dockerfile, you can run:
 
 ```bash
-# build the `dev` stage and tag it as sanuli-dev:
+# build the `dev` stage as target and tag the image as sanuli-dev:
 docker build --target dev --tag sanuli-dev .
 
-# run the development image like before:
+# run the development image in a container like before:
 docker run --rm --publish 127.0.0.1:8080:8080 sanuli-dev
 
 # then, visit http://localhost:8080 in your browser
