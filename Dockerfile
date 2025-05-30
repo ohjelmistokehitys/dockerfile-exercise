@@ -1,3 +1,4 @@
+# see https://hub.docker.com/_/rust
 FROM rust:latest
 
 # We recommend using /sanuli as the working directory and
