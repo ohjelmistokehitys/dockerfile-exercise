@@ -105,34 +105,46 @@ Create a `.dockerignore` file to specify which files and directories should be i
 
 ## Step 5: Multi stage Dockerfile
 
-As you have noticed at this point, building the Sanuli application requires quite a bunch of tools and dependencies and it can be very slow. Use `docker image ls` to list the images on your system and see how large the Sanuli image is. The size of the image is expected to be over 2 gigabytes, which is quite large for a relatively simple web application.
+As you have noticed at this point, building the Sanuli application requires quite a bunch of tools and dependencies and it can be slow. Use `docker image ls` to list the images on your system and see how large the Sanuli image is before any optimizations. The size of the image is expected to be over 2 gigabytes, which is quite large for this relatively simple web application.
 
 To this point, we have been utilizing the development tools and development server, but when we run the application in production, we only need the built artifacts, which are the static files that the web server serves to the clients. The size of our production image should therefore be measured in megabytes, not gigabytes. To achieve this, use [multi-stage builds](https://docs.docker.com/build/building/multi-stage/) in the Dockerfile.
 
 Familiarize yourself with multi-stage builds using [videos](https://www.youtube.com/results?search_query=docker+multi+stage+build), [tutorials and articles](https://www.google.com/search?q=docker+multi+stage+build) of your choice. Then, refer to the Sanuli readme section for "Release build", which explains the single command, that produces small production package of the application.
 
-When you have a rough understanding of the concept, you can start modifying your Dockerfile. The following example shows how to structure the Dockerfile using multi-stage builds. The example is not complete, but it should give you an idea of how to proceed.
+When you have a rough understanding of the concept, you can start modifying your Dockerfile. The following example shows how to structure the Dockerfile using multi-stage builds.
+
+The example is almost complete, and it does not require many changes. The first stages, `builder-base` and `dev`, are the ones that correspond to the previous parts of the exercise. `build` is a new stage, where the production artifacts are built, and `release` is the final stage that serves the built application using an nginx web server.
+
+You will only need to make changes in the `builder-base` and `dev` stages, which the `build` and `release` stages depend on. If you have a workig Dockerfile from the previous steps, you will only need to move the existing instructions to the correct stages to complete this final modification to the Dockerfile.
 
 ```dockerfile
 FROM rust:latest AS builder-base
 # This step has the steps required by all stages, such as installing dependencies.
+#
 # Move your previous COPY, RUN and WORKDIR instructions here, as they are needed
-# by all stages. Leave out the CMD instruction as this stage is not meant to
-# produce a runnable application, but to prepare the environment.
+# by all stages.
+#
+# Leave out the CMD instruction, as this stage is not meant to produce a runnable
+# application, but to prepare the environment.
 
 
 FROM builder-base AS dev
-# This stage can be used for development, and it uses the builder-base stage
-# as the base. In here, add the EXPOSE and CMD instructions that were previously
-# used for starting the development server.
+# This stage is used for development, and it uses the previous builder-base as its
+# base. In here, add the EXPOSE and CMD instructions to expose the port and run the
+# development server.
 
 
 FROM builder-base AS build
 # In this stage, we will build the production artifacts. The stage uses the
-# same base as the dev stage, so the environment should be ready, and you can
-# add a `RUN` instruction to build the application as described in the
+# same base as the dev stage, so the environment should be ready. We can
+# use a `RUN` instruction to build the application as described in the
 # Sanuli readme file.
 #
+# In the readme, RUSTFLAGS are set on the same line as the `trunk build`
+# command, but here we have split them into two lines for clarity:
+ENV RUSTFLAGS="--cfg=web_sys_unstable_apis --remap-path-prefix \$HOME=~"
+RUN trunk build --release
+
 # No CMD instruction is needed here, as this stage will be used by the next stage,
 # that will actually run a web server.
 
@@ -146,7 +158,7 @@ FROM nginx:alpine AS release
 # copy the static files from the build stage, leaving out all unnecessary tools:
 COPY --from=build /sanuli/dist /usr/share/nginx/html
 
-# Nginx listens to port 80 by default, so we need to expose that port:
+# Nginx listens to port 80 by default, so we expose that port:
 EXPOSE 80
 
 # The CMD instruction is not needed here, as the nginx base image already has a CMD
@@ -165,6 +177,8 @@ docker build --target dev --tag sanuli-dev .
 
 # run the development image like before:
 docker run --rm --publish 127.0.0.1:8080:8080 sanuli-dev
+
+# then, visit http://localhost:8080 in your browser
 ```
 
 To build the production image, set the target to `release`, as specified in the last stage in the Dockerfile:
@@ -175,7 +189,11 @@ docker build --target release --tag sanuli .
 
 # now, run the production image, but map the local port to port 80 in the container:
 docker run --rm --publish 80:80 sanuli
+
+# then, visit http://localhost in your browser
 ```
+
+The production image should now start in an instant and start several processes to be able to serve the files efficiently to a large number of users. Verify that the application is running by visiting [http://localhost](http://localhost) in your web browser.
 
 Last, check the sizes of your images using the `docker image ls` command. The development image should still be very large, while the production image should be much smaller, measured in megabytes.
 
@@ -193,9 +211,9 @@ Automated grading is implemented using GitHub actions and GitHub classroom. Afte
 
 ## Optional: remove the container(s) and image(s)
 
-Although Sanuli is a simple web app, the container is expected to be over 2 gigabytes in size, so it is a good idea to remove the container and image after you have completed the exercise. This will free up disk space on your system.
+Although Sanuli is a simple web app, its container can be 2 gigabytes in size, so it is a good idea to remove the container and image after you have completed the exercise. This will free up disk space on your system.
 
-Use the commands `docker container ls --all` and `docker image ls` to list all containers and images. You will need to stop and remove containers before you can remove the images. To remove a container, use the `docker container rm` command, and to remove an image, use the `docker image rm` command.
+Use the commands `docker container ls --all` and `docker image ls` to list all containers and images that you have used in this exercise. You will need to stop and remove containers before you can remove the images. To remove a container, use the `docker container rm` command, and to remove an image, use the `docker image rm` command.
 
 * [`docker container` documentation](https://docs.docker.com/reference/cli/docker/container/)
 * [`docker image` documentation](https://docs.docker.com/reference/cli/docker/image/)
@@ -204,7 +222,6 @@ Use the commands `docker container ls --all` and `docker image ls` to list all c
 ## Licenses
 
 This exercise would not be possible without the work of others. We are grateful for the open source and open data communities for providing the tools and resources that make this exercise possible.
-
 
 ### Sanuli
 
