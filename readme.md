@@ -26,6 +26,43 @@ git submodule update    # fetch the latest code from the submodule repository
 If you want to learn more about Git submodules, we recommend watching the video [Git Submodules Tutorial (YouTube)](https://youtu.be/gSlXo2iLBro?si=Q_srt86bHf767323) or reading the [Git documentation on submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules). However, the two commands above are all you need in this exercise.
 
 
+## Side quest: Creating a sandbox
+
+In DevOps, automation is often seen as the ultimate goal - a way to streamline processes, reduce errors, and accelerate delivery. But it can be difficult and daunting to start with automating a task, if you don't understand it or haven't done it manually first.
+
+Executing tasks manually may reveal nuances, edge cases, and unexpected requirements that would be more difficult to discover if trying to achieve full automation right away. This is especially true for complex tasks, such as the one we are about to tackle in this exercise. Even though the exercise aims to create a Dockerfile, you may want to start by creating a simple Docker container with a plain base image first. We could call this a "sandbox", where you can experiment with all the commands and steps. To create such a sandbox, you can use the [Rust base image](https://hub.docker.com/_/rust) as the base image and run a container from it. This will give you a minimal environment with the necessary tools to build and run the Sanuli application. You can also copy the Sanuli source code into the container manually, and try to follow the quick start instructions from the [Sanuli readme file](./sanuli/README.md) to get the application running.
+
+```bash
+# Create an interacative container with the latest default Rust image.
+# Add a port mapping and a name, but do not start it yet (create instead of run):
+docker create -it --publish 127.0.0.1:8080:8080 --name sanuli-sandbox rust:latest
+
+# Copy the Sanuli source code into the container:
+docker cp sanuli sanuli-sandbox:/sanuli
+
+# Start the container (this will run the container in the background):
+docker start sanuli-sandbox
+
+# Attach to the container's terminal to interact with it:
+docker attach sanuli-sandbox
+```
+
+The previous steps should end up with a terminal in the container, where you can run commands as if you were in a regular Linux environment. The Sanuli source code should now be available in the `/sanuli` directory inside the container:
+
+```bash
+# In the container terminal, change to the Sanuli directory:
+cd /sanuli
+
+# List the copied files:
+ls -la
+
+# Read the readme for further quick start instructions:
+cat README.md
+```
+
+Now, you can try to get the Sanuli application running manually, without worrying about the Dockerfile yet. This way, you can familiarize yourself with the application and its requirements, and then apply that knowledge to create a Dockerfile that automates the process of building and running the application.
+
+
 ## Step 1: Creating the Dockerfile
 
 This repository contains an empty [Dockerfile](./Dockerfile) that you will use to build the Docker image for Sanuli. As you already know, a Dockerfile is a text file that contains instructions for building a Docker image. Docker images are the executable packages that contain everything needed to run an application, including the code, runtime, libraries, and dependencies. Images are based on base images, which provide the operating system and other necessary components. In this exercise, we recommend using the official [Rust base image](https://hub.docker.com/_/rust) as the base image.
@@ -98,6 +135,7 @@ When the container is running, you can access the application in your web browse
 > [!NOTE]
 > Starting the application is likely produce a few warnings related to unused variables or unexpected conditions. These warnings are not errors, and they do not prevent the application from running.
 
+
 ## Step 4: Ignoring files with `.dockerignore`
 
 The container seems to be running nicely, but there are some files in there that we would not like to copy into the container. Typically such files include local build artifacts or *node_modules* that are not needed in the container, or *.env* files, which contain your local environment variables. In Sanuli's case, we would like to exclude the *README.md* file from the container.
@@ -108,7 +146,7 @@ Your task is to create a `.dockerignore` file to specify which files and directo
 > As the *README.md* file is in the subfolder, you can't just write the name `README.md` in the `.dockerignore` file. There are many ways you can refer to the file, either with a specific path or a pattern. See the [Docker documentation on .dockerignore files](https://docs.docker.com/build/concepts/context/#dockerignore-files) for options on how to exclude that file.
 
 
-## Step 5: Multi stage Dockerfile
+## Step 5: multi stage Dockerfile
 
 As you have noticed at this point, building the Sanuli application requires quite a bunch of tools and dependencies and it can be slow. Use `docker image ls` to list the images on your system and see how large the Sanuli image is before any optimizations. The size of the image is expected to be over 2 gigabytes, which is quite large for this relatively simple web application.
 
