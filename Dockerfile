@@ -12,7 +12,10 @@ WORKDIR /sanuli
 # TODO: follow the quick start instructions of Sanuli readme
 
 # TODO: fetch or create word lists
+# hint: see the readme.md and fetch-words.sh
 
 # TODO: expose the development server port
 
 # TODO: run the development server
+# hint: see the readme.md for information on accepting
+# connections from outside the container

@@ -23,7 +23,7 @@ git submodule init      # initialize the submodule
 git submodule update    # fetch the latest code from the submodule repository
 ```
 
-**You will not need to make any changes in the Sanuli code**. Reading the [Sanuli readme file](./sanuli/README.md) is enough to understand how to build and run the application. There are also instructions on how to prepare the word lists that the game uses, which we will cover later in the exercise.
+**You will not need to make any changes in the Sanuli code**. Reading the [Sanuli readme file](https://github.com/Cadiac/sanuli/blob/master/README.md) is enough to understand how to build and run the application. There are also instructions on how to prepare the word lists that the game uses, which we will cover later in the exercise.
 
 If you want to learn more about Git submodules, we recommend watching the video [Git Submodules Tutorial (YouTube)](https://youtu.be/gSlXo2iLBro?si=Q_srt86bHf767323) or reading the [Git documentation on submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules). However, the two commands above are all you need in this exercise.
 
@@ -32,7 +32,7 @@ If you want to learn more about Git submodules, we recommend watching the video 
 
 In DevOps, automation is often seen as the ultimate goal - a way to streamline processes, reduce errors, and accelerate delivery. But it can be difficult and daunting to start with automating a task, if you don't understand it or haven't done it manually first.
 
-Executing tasks manually may reveal nuances, edge cases, and unexpected requirements that would be more difficult to discover if trying to achieve full automation right away. This is especially true for complex tasks, such as the one we are about to tackle in this exercise. Even though the exercise aims to create a Dockerfile, you may want to start by creating a simple Docker container with a plain base image first. We could call this a "sandbox", where you can experiment with all the commands and steps. To create such a sandbox, you can use the [Rust base image](https://hub.docker.com/_/rust) and run a container from it. This will give you a minimal environment with the necessary tools to build and run the Sanuli application. You can also copy the Sanuli source code into the container manually, and follow the quick start instructions from the [Sanuli readme file](./sanuli/README.md) to get the application running.
+Executing tasks manually may reveal nuances, edge cases, and unexpected requirements that would be more difficult to discover if trying to achieve full automation right away. This is especially true for complex tasks, such as the one we are about to tackle in this exercise. Even though the exercise aims to create a Dockerfile, you may want to start by creating a simple Docker container with a plain base image first. We could call this a "sandbox", where you can experiment with all the commands and steps. To create such a sandbox, you can use the [Rust base image](https://hub.docker.com/_/rust) and run a container from it. This will give you a minimal environment with the necessary tools to build and run the Sanuli application. You can also copy the Sanuli source code into the container manually, and follow the quick start instructions from the [Sanuli readme file](https://github.com/Cadiac/sanuli/blob/master/README.md) to get the application running.
 
 ```bash
 # Create an interacative container with the latest default Rust image.
@@ -71,7 +71,7 @@ This repository contains a [Dockerfile](./Dockerfile) that you will use to build
 
 Docker images are the executable packages that contain everything needed to run an application, including the code, runtime, libraries, and dependencies. Images are based on base images, which provide the operating system and other necessary components. In this exercise, we recommend using the official [Rust base image](https://hub.docker.com/_/rust) as the base image.
 
-The [Sanuli readme file](./sanuli/README.md) contains all the commands needed to build and run the application. The tools, which come pre-installed in the Rust base image, are:
+The [Sanuli readme file](https://github.com/Cadiac/sanuli/blob/master/README.md) contains all the commands needed to build and run the application. The tools, which come pre-installed in the Rust base image, are:
 
 * [`rustup` for toolchain management](https://www.rust-lang.org/tools/install).
 * [`cargo` for package management](https://doc.rust-lang.org/cargo/).
@@ -79,7 +79,7 @@ The [Sanuli readme file](./sanuli/README.md) contains all the commands needed to
 
 Note that you don't need to install Rust or any of these tools, as the base image already contains them. However, the repository does not contain word lists, which we will cover later in the exercise.
 
-To complete this part of the exercise, you will need to read the "quick start" instructions from the [readme file](./sanuli/README.md) and apply them in your Dockerfile. You will need to utilize the [`WORKDIR`, `COPY`, `RUN`, `EXPOSE` and `CMD` instructions](https://docs.docker.com/reference/dockerfile/), which are described in every Docker tutorial, and they are typically used very similarly regardless of the technology being used. Copying source code into the image, installing dependencies and building applications is very similar regardless of whether you are using Rust, Node.js, React, Java or any other technology.
+To complete this part of the exercise, you will need to read the "quick start" instructions from the [readme file](https://github.com/Cadiac/sanuli/blob/master/README.md) and apply them in your Dockerfile. You will need to utilize the [`WORKDIR`, `COPY`, `RUN`, `EXPOSE` and `CMD` instructions](https://docs.docker.com/reference/dockerfile/), which are described in every Docker tutorial, and they are typically used very similarly regardless of the technology being used. Copying source code into the image, installing dependencies and building applications is very similar regardless of whether you are using Rust, Node.js, React, Java or any other technology.
 
 We recommend referring to the [Dockerfile reference documentation](https://docs.docker.com/reference/dockerfile/) for a detailed explanation of each instruction. Consider when each instruction should be executed. For example, installing tools and dependencies should happen in the build phase using `RUN` instructions, while starting the development server should be done in the run phase using `CMD` (or `ENTRYPOINT`) instructions.
 
@@ -98,7 +98,7 @@ CMD ["trunk", "serve", "--address", "0.0.0.0"]
 
 ### Adding word lists
 
-Sanuli uses a few word lists to provide words for the game, which are referred to in the [Sanuli readme file](./sanuli/README.md). The word lists are not included in the repository, so you will need to prepare them yourself. For this exercise, the contents of the word lists are not important, so you can create empty files or write a few five letter words in text files yourself. You can also familiarize yourself with the scripts in [sanuli/src/bin](./sanuli/src/bin/) folder.
+Sanuli uses a few word lists to provide words for the game, which are referred to in the [Sanuli readme file](https://github.com/Cadiac/sanuli/blob/master/README.md). The word lists are not included in the repository, so you will need to prepare them yourself. For this exercise, the contents of the word lists are not important, so you can create empty files or write a few five letter words in text files yourself. You can also familiarize yourself with the scripts in [sanuli/src/bin](./sanuli/src/bin/) folder.
 
 If you want, you can use the word lists provided by the [Institute for the Languages of Finland](https://kotus.fi/) (Kotimaisten kielten keskus). Their [Nykysuomen sanalista](https://kotus.fi/sanakirjat/kielitoimiston-sanakirja/nykysuomen-sana-aineistot/nykysuomen-sanalista/) can be downloaded and used according to the [license terms](https://creativecommons.org/licenses/by/4.0/deed.fi).
 
