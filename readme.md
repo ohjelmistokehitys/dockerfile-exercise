@@ -86,7 +86,7 @@ We recommend referring to the [Dockerfile reference documentation](https://docs.
 
 ### Accepting connections from the host system
 
-When running a web application in a Docker container, you need to ensure that the application is accessible from your host system. By default, the `trunk` development server listens only to the localhost interface, which means that the app won't accept connections from the host system, but only from the container itself.
+When running a web application in a Docker container, you need to ensure that the application is accessible from your host system. By default, the `trunk` development server listens only to the localhost interface, which means that the app is only accessible from the container itself. We need to change this to be able to access the app with our browser.
 
 To allow connections from the host system (your browser), you need to [specify the `--address` option when running the `trunk serve` command](https://trunkrs.dev/configuration/#server-section) in the Dockerfile:
 
@@ -102,9 +102,18 @@ Sanuli uses a few word lists to provide words for the game, which are referred t
 
 If you want, you can use the word lists provided by the [Institute for the Languages of Finland](https://kotus.fi/) (Kotimaisten kielten keskus). Their [Nykysuomen sanalista](https://kotus.fi/sanakirjat/kielitoimiston-sanakirja/nykysuomen-sana-aineistot/nykysuomen-sanalista/) can be downloaded and used according to the [license terms](https://creativecommons.org/licenses/by/4.0/deed.fi).
 
-We have prepared a [fetch-words.sh](./fetch-words.sh) script that will download the word list from the Kotus website and prepare it in a format that Sanuli can use. You can *copy the script into the container* and *run it there during the build*, before the build steps for the application itself is built.
+We have prepared a [fetch-words.sh](./fetch-words.sh) script that will download the word list from the Kotus website and prepare it in a format that Sanuli can use. You can *copy the script into the container* and run it, before the application itself is built:
 
-Please note that the URL and the format of the word list is subject to change, so familiarize yourself with the script and the Kotus website to make sure everything works as expected:
+```dockerfile
+# Copy the script for fetching words, and make it executable:
+COPY fetch-words.sh ./
+RUN chmod +x fetch-words.sh
+
+# Run the script to populate the required word files:
+RUN ./fetch-words.sh
+```
+
+Please note that the URL and the format of the word list in [fetch-words.sh](./fetch-words.sh) is subject to change, so familiarize yourself with the script and the Kotus website to make sure everything works as expected:
 
 > *"The list is updated in connection with updates to the Kielitoimisto dictionary, approximately every year or two, and other changes may also be made."*
 >
@@ -113,7 +122,7 @@ Please note that the URL and the format of the word list is subject to change, s
 
 ## Step 2: Building the Docker image
 
-Once you have either completed or at least added a few first lines to the Dockerfile, you can build the Docker image. To do this, run the following command in the terminal from the root of your repository:
+Once you have added a few first lines to the Dockerfile, you can try building the Docker image. To do this, run the following command in the terminal from the root of your repository:
 
 ```bash
 # run build in current folder "." and tag the image as "sanuli"
@@ -131,7 +140,7 @@ Once the image is built, you can run the application in a container. As the app 
 ```bash
 # Run the container and map port 8080 in the container to port 8080 on the host.
 # `--rm` option removes the container automatically after it is stopped.
-docker run --rm --publish 127.0.0.1:8080:8080 sanuli
+docker run -it --rm --publish 127.0.0.1:8080:8080 sanuli
 ```
 
 When the container is running, you can access the application in your web browser by navigating to [http://localhost:8080](http://localhost:8080). You should see the Sanuli game interface. If the connection is refused but there are no erros in the Docker logs, verify that you specified the server to listen to all interfaces by using the `--address` option in the `CMD` instruction of your Dockerfile, as described earlier.
@@ -144,27 +153,40 @@ If you get an error message about the port being in use, make sure that you have
 
 ## Step 4: Ignoring files with `.dockerignore`
 
-The container seems to be running nicely, but there are some files in there that we would not like to copy into the container. Typically such files include local build artifacts or *node_modules* that are not needed in the container, or *.env* files, which contain your local environment variables. In Sanuli's case, we would like to exclude the *README.md* file from the container.
+The container seems to be running nicely, but there are some files in there that we would not like to copy into the container. Typically such files include local build artifacts or *node_modules* that are not needed in the container, *.env* files, which contain your local environment variables, and *.git* directories, that contain the version history of your project. In Sanuli's case, we would like to exclude the *README.md* file and the *.git* directory from the container.
 
-Your task is to create a `.dockerignore` file to specify which files and directories should be ignored when building the Docker image. Add a new `.dockerignore` file alongside your Dockerfile and add specify the `README.md` file under [sanuli/](./sanuli/) folder in it. Then add and commit your changes to the repository.
+Your task is to create a `.dockerignore` file to specify which files and directories should be ignored when building the Docker image. Add a new `.dockerignore` file alongside your Dockerfile and add specify the `README.md` file and the `.git` directory in it. Then add and commit your changes to the repository.
 
 > [!NOTE]
-> As the *README.md* file is in the subfolder, you can't just write the name `README.md` in the `.dockerignore` file. There are many ways you can refer to the file, either with a specific path or a pattern. See the [Docker documentation on .dockerignore files](https://docs.docker.com/build/concepts/context/#dockerignore-files) for options on how to exclude that file.
+> As the *README.md* file is in the subfolder, you can't just write the name `README.md` in the `.dockerignore` file. There are many ways you can refer to the file, either with a specific path (`path/to/file`) or a pattern (`**/file`). See the [Docker documentation on .dockerignore files](https://docs.docker.com/build/concepts/context/#dockerignore-files) for options on how to exclude files.
+>
+> Also, note that these exercise instructions are in the root `readme.md` file, which is different from the `README.md` file in the *sanuli* subfolder 🙃. The root file will likely not be copied into the container anyway, as you only need to copy files from the *sanuli* subfolder.
 
 
 ## Step 5: multi stage Dockerfile
 
-As you have noticed at this point, building the Sanuli application requires quite a bunch of tools and dependencies and it can be slow. Use `docker image ls` to list the images on your system and see how large the Sanuli image is before any optimizations. The size of the image is expected to be over 2 gigabytes, which is quite large for this relatively simple web application.
+As you have noticed at this point, building the Sanuli application requires quite a bunch of tools and dependencies and it can be slow to start. Use `docker image ls` to list the images on your system and see how large the Sanuli image is before any optimizations. The size of the image is expected to be over 2 gigabytes, which is quite large for this relatively simple web application.
+
+**Development vs. production build**
 
 To this point, we have been utilizing Rust development tools and the Trunk development server, but in production, none of these tools will be required. When publishing the app, only the compiled source code and static files (word lists, images etc.) are needed. All of these can be served to the clients as static files. The size of our production image should therefore be measured in megabytes, not gigabytes. To reduce the size, we can use [multi-stage builds](https://docs.docker.com/build/building/multi-stage/) in the Dockerfile.
 
-Familiarize yourself with multi-stage builds using [videos](https://www.youtube.com/results?search_query=docker+multi+stage+build), [tutorials](https://www.google.com/search?q=docker+multi+stage+build) and [articles](https://www.docker.com/blog/how-to-dockerize-react-app/) of your choice. Then, refer to the Sanuli readme section for "Release build", which explains the single command, that produces a small production package of the application.
+Refer to the Sanuli readme section for "Release build", which explains the single command, that produces a small production package of the application. Below, we have split that command into a separate env command and a build command, which you can utilize in your Dockerfile:
 
-When you have a rough understanding of the concept, you can start modifying your Dockerfile. The following example shows how to structure the Dockerfile using multi-stage builds.
+```dockerfile
+ENV RUSTFLAGS="--cfg=web_sys_unstable_apis --remap-path-prefix \$HOME=~"
+RUN trunk build --release
+```
 
-The example below is almost complete, and it does not require many changes. We recommend you use it as the starting point. The first stages, `builder-base` and `dev`, are the ones that correspond to the previous parts of the exercise. `build` is a new stage, where the production artifacts are built, and `release` is the final stage that serves the built application using an nginx web server.
+**Multi-stage build**
 
-You will only need to make changes in the `builder-base` and `dev` stages, which the `build` and `release` stages depend on. If you have a workig Dockerfile from the previous steps, you will only need to move the existing instructions to the correct stages to complete this final modification to the Dockerfile.
+Familiarize yourself with multi-stage builds using [videos](https://www.youtube.com/results?search_query=docker+multi+stage+build), [tutorials](https://www.google.com/search?q=docker+multi+stage+build) and [articles](https://www.docker.com/blog/how-to-dockerize-react-app/) of your choice. When you have a rough understanding of the concept, you can start modifying your Dockerfile to create a multi-stage build.
+
+The following example shows how to structure the Dockerfile using multi-stage builds, use it as a template. The file may appear complex at first, but luckily it will not require many changes. The first stages, `builder-base` and `dev`, are the ones that correspond to the previous parts of the exercise, which you have already completed. The new stages, `build` and `release`, should not require any changes, as long as the previous stages are working correctly.
+
+The `builder-base`, `dev` and `build` stages have been separated from the `release` stage, which is based on a lightweight nginx image. This way, the final image will not contain any of the Rust toolchain or development server, which reduces the size of the released image significantly.
+
+You will only need to make changes in the `builder-base` and `dev` stages, which the `build` and `release` stages depend on. If you have a working Dockerfile from the previous steps, you will only need to move the existing instructions to the correct stages to complete this final modification to the Dockerfile.
 
 ```dockerfile
 FROM rust:latest AS builder-base
@@ -183,7 +205,7 @@ FROM rust:latest AS builder-base
 FROM builder-base AS dev
 # This stage is used for development, and it uses the previous builder-base as its
 # base, so the code and dependencies are already in place. In here, add the
-# EXPOSE and CMD instructions from your initial solution to expose the port
+# CMD and EXPOSE instructions from your initial solution to expose the port
 # and to start the development server.
 
 
@@ -198,8 +220,8 @@ ENV RUSTFLAGS="--cfg=web_sys_unstable_apis --remap-path-prefix \$HOME=~"
 RUN trunk build --release
 #
 # No CMD instruction is needed here, as there is no need to run a container
-# from this stage. Instead, we will copy and serve the built artifacts at
-# /sanuli/dist in the next stage.
+# from this stage. Instead, we will copy and serve the built artifacts from
+# this stage in the next stage.
 
 
 
@@ -253,7 +275,12 @@ docker run --rm --publish 127.0.0.1:80:80 sanuli
 # then, visit http://localhost in your browser
 ```
 
-The production image should now start in an instant and nginx should start several processes to serve the files efficiently to a large number of users. Verify that the application is running by visiting [http://localhost](http://localhost) in your web browser.
+The production image should now start in an instant and nginx should start several processes to serve the files efficiently to a large number of users. Verify that the application is running by visiting [http://localhost](http://localhost) in your web browser. If you are not able to start the production image on port 80, it may be because you do not have the necessary permissions to bind to ports below 1024. In that case, you can map the container's port 80 to a higher port on your host system, such as 8080:
+
+```bash
+docker run --rm --publish 127.0.0.1:8080:80 sanuli
+# visit http://localhost:8080 in your browser
+```
 
 Last, check the sizes of your images using the `docker image ls` command. The development image should still be very large, while the production image should be much smaller, measured in megabytes.
 
@@ -282,6 +309,7 @@ Use the commands `docker container ls --all` and `docker image ls` to list all c
 ## Licenses
 
 This exercise would not be possible without the work of others. We are grateful for the open source and open data communities for providing the tools and resources that make this exercise possible.
+
 
 ### Sanuli
 

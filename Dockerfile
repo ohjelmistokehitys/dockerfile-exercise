@@ -1,21 +1,24 @@
 # see https://hub.docker.com/_/rust
 FROM rust:latest
 
-# We recommend using /sanuli as the working directory and
-# copying the application code there. If you use a different
-# path, you need to adjust the instructions in the later parts
-# of the exercise accordingly.
+# We recommend using /sanuli as the working directory:
 WORKDIR /sanuli
 
-# TODO: copy the source code to the working directory
+# TODO: copy the sanuli submodule to the /sanuli directory
+
+
+# Copy the script for fetching words and populate word lists:
+COPY fetch-words.sh ./
+RUN chmod +x fetch-words.sh
+RUN ./fetch-words.sh
+
 
 # TODO: follow the quick start instructions of Sanuli readme
-
-# TODO: fetch or create word lists
-# hint: see the readme.md and fetch-words.sh
+# (the `rustup` and `cargo` steps in quick start)
 
 # TODO: expose the development server port
+# (check Sanuli readme for the dev server port)
 
-# TODO: run the development server
-# hint: see the readme.md for information on accepting
-# connections from outside the container
+# Run the `trunk` development server, and accept connections
+# from outside the container:
+CMD ["trunk", "serve", "--address", "0.0.0.0"]
