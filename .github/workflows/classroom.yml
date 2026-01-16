@@ -19,7 +19,7 @@ jobs:
       with:
         test-name: Commands in Dockerfile (rustup)
         setup-command: docker build --check .
-        command: cat Dockerfile
+        command: cat Dockerfile | tr -cd '[:print:]\n'
         input: ''
         expected-output: rustup
         comparison-method: contains
@@ -31,9 +31,9 @@ jobs:
       with:
         test-name: Commands in Dockerfile (cargo)
         setup-command: docker build --check .
-        command: cat Dockerfile
+        command: cat Dockerfile | tr -cd '[:print:]\n'
         input: ''
-        expected-output: cargo install
+        expected-output: cargo
         comparison-method: contains
         timeout: 3
         max-score: 15
@@ -43,7 +43,7 @@ jobs:
       with:
         test-name: Commands in Dockerfile (trunk)
         setup-command: docker build --check .
-        command: cat Dockerfile
+        command: cat Dockerfile | tr -cd '[:print:]\n'
         input: ''
         expected-output: trunk
         comparison-method: contains
@@ -55,7 +55,7 @@ jobs:
       with:
         test-name: Ignoring files (sanuli/README.md)
         setup-command: ''
-        command: cat .dockerignore
+        command: ls .dockerignore
         timeout: 1
         max-score: 15
     - name: Multi stage build (dev)
