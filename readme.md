@@ -4,19 +4,19 @@ This exercise will guide you through the process of containerizing a web applica
 
 We assume that you have completed previous exercises in this course and are familiar with basic concepts of Docker. This exercise itself is *not a tutorial*, but an exercise, where you are expected to apply the knowledge from other tutorials and documentation. You need to do your own research and read the documentation to complete the tasks. Discussing the tasks with your peers and instructors is highly encouraged.
 
-The [Docker workshop (docker.com)](https://docs.docker.com/get-started/workshop/) provides a good introduction to Dockerfiles and how to use them. The blog post [How to Dockerize a React App(Docker.com)](https://www.docker.com/blog/how-to-dockerize-react-app/) provides a very similar example, but for a React application. Although the technologies are different, the concepts and instructions are very similar, so you can apply the knowledge from that post to this exercise as well.
+The [Docker workshop (docker.com)](https://docs.docker.com/get-started/workshop/) provides a good introduction to Dockerfiles and how to use them. The blog post [How to Dockerize a React App (docker.com)](https://www.docker.com/blog/how-to-dockerize-react-app/) provides a very similar example, but for a React application. Although the technologies are different, the concepts and instructions are very similar, so you can apply the knowledge from that post to this exercise as well.
 
 
 ## Sanuli
 
 The application to be containerized this exercise is Sanuli, *"A finnish version of a popular word guessing game implemented in Rust."* [(Sanuli at GitHub)](https://github.com/Cadiac/sanuli) You can play the game online at [sanuli.fi](https://sanuli.fi/).
 
-Although the game is [written in Rust](https://www.rust-lang.org/), **you do not need to know Rust nor install any Rust tools in your host system**. Instead, you will use [a Docker base image](https://hub.docker.com/_/rust) that contains the necessary tools to build and run the application.
+Although the game is [written in Rust](https://www.rust-lang.org/), **you do not need to know Rust nor install any Rust tools in your host system**. Instead, you will use [the Rust base image for Docker](https://hub.docker.com/_/rust) that contains the necessary tools to build and run the application.
 
 
 ## The Sanuli *submodule*
 
-Sanuli has its own [Git repository](https://github.com/Cadiac/sanuli), which we have included as a [submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules) in this repository. This allows you to easily access the Sanuli code without needing to clone it separately. Initially after you have cloned this repository, the submodule [/sanuli](./sanuli) will be empty. To populate it with the code from the upstream Sanuli repository, you need to initialize and update the submodule in the root of your repository. You can do this by running the following commands in the terminal:
+Sanuli has its own [Git repository](https://github.com/Cadiac/sanuli), which we have included as a [submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules) in this repository. This allows you to easily access the Sanuli code without needing to clone it separately. Initially, when you clone this repository, the submodule [/sanuli](./sanuli) will be empty. To populate it with the code from the upstream Sanuli repository, you need to initialize and update the submodule in the root of your repository. You can do this by running the following commands in the terminal:
 
 ```bash
 git submodule init      # initialize the submodule
@@ -30,7 +30,7 @@ If you want to learn more about Git submodules, we recommend watching the video 
 
 ## Side quest: Creating a sandbox
 
-In DevOps, automation is often seen as the ultimate goal - a way to streamline processes, reduce errors, and accelerate delivery. But it can be difficult and daunting to start with automating a task, if you don't understand it or haven't done it manually first.
+In DevOps, automation is often seen as the ultimate goal - a way to streamline processes, reduce errors, and accelerate delivery. But it can be difficult and daunting to start with automating a task, if you don't understand it or haven't done it manually first. Although the end game is to create a Dockerfile, you may want to first get your hands dirty and try to run the application manually in a container.
 
 Executing tasks manually may reveal nuances, edge cases, and unexpected requirements that would be more difficult to discover if trying to achieve full automation right away. This is especially true for complex tasks, such as the one we are about to tackle in this exercise. Even though the exercise aims to create a Dockerfile, you may want to start by creating a simple Docker container with a plain base image first. We could call this a "sandbox", where you can experiment with all the commands and steps. To create such a sandbox, you can use the [Rust base image](https://hub.docker.com/_/rust) and run a container from it. This will give you a minimal environment with the necessary tools to build and run the Sanuli application. You can also copy the Sanuli source code into the container manually, and follow the quick start instructions from the [Sanuli readme file](https://github.com/Cadiac/sanuli/blob/master/README.md) to get the application running.
 
@@ -42,11 +42,8 @@ docker create -it --publish 127.0.0.1:8080:8080 --name sanuli-sandbox rust:lates
 # Copy the Sanuli source code into the container:
 docker cp sanuli sanuli-sandbox:/sanuli
 
-# Start the container (this will run the container in the background):
-docker start sanuli-sandbox
-
-# Attach to the container's terminal to interact with it:
-docker attach sanuli-sandbox
+# Start the container and attach to its terminal:
+docker start sanuli-sandbox --attach --interactive
 ```
 
 The previous steps should end up with a terminal in the container, where you can run commands as if you were in a regular Linux environment. The Sanuli source code should now be available in the `/sanuli` directory inside the container:
@@ -62,7 +59,7 @@ ls -la
 cat README.md
 ```
 
-Now, you can try to get the Sanuli application running manually, without worrying about the Dockerfile yet. This way, you can familiarize yourself with the application and its requirements, and then apply that knowledge to create a Dockerfile that automates the process of building and running the application.
+Now, you can try to get the Sanuli application running manually, following the Quick start instructions. This way, you can familiarize yourself with the application and its requirements, and then apply that knowledge to create a Dockerfile that automates the process of building and running the application.
 
 
 ## Step 1: Creating the Dockerfile
@@ -83,6 +80,9 @@ To complete this part of the exercise, you will need to read the "quick start" i
 
 We recommend referring to the [Dockerfile reference documentation](https://docs.docker.com/reference/dockerfile/) for a detailed explanation of each instruction. Consider when each instruction should be executed. For example, installing tools and dependencies should happen in the build phase using `RUN` instructions, while starting the development server should be done in the run phase using `CMD` (or `ENTRYPOINT`) instructions.
 
+> [!NOTE]
+> Starting the application is likely produce a few warnings related to unused variables or unexpected conditions. These warnings are not errors, and they do not prevent the application from running.
+
 
 ### Accepting connections from the host system
 
@@ -94,7 +94,6 @@ To allow connections from the host system (your browser), you need to [specify t
 # listens to all interfaces (0.0.0.0)
 CMD ["trunk", "serve", "--address", "0.0.0.0"]
 ```
-
 
 ### Adding word lists
 
@@ -182,9 +181,9 @@ RUN trunk build --release
 
 Familiarize yourself with multi-stage builds using [videos](https://www.youtube.com/results?search_query=docker+multi+stage+build), [tutorials](https://www.google.com/search?q=docker+multi+stage+build) and [articles](https://www.docker.com/blog/how-to-dockerize-react-app/) of your choice. When you have a rough understanding of the concept, you can start modifying your Dockerfile to create a multi-stage build.
 
-The following example shows how to structure the Dockerfile using multi-stage builds, use it as a template. The file may appear complex at first, but luckily it will not require many changes. The first stages, `builder-base` and `dev`, are the ones that correspond to the previous parts of the exercise, which you have already completed. The new stages, `build` and `release`, should not require any changes, as long as the previous stages are working correctly.
+The following example shows how to structure the Dockerfile using multi-stage builds, use it as a template. The file may appear complex at first, but luckily it will not require many changes. The first stages, `builder-base` and `dev`, are the ones that correspond to the previous parts of the exercise, which you have already completed. The new stages, `build` and `release`, should not require any changes, assuming that you get the previous stages working correctly.
 
-The `builder-base`, `dev` and `build` stages have been separated from the `release` stage, which is based on a lightweight nginx image. This way, the final image will not contain any of the Rust toolchain or development server, which reduces the size of the released image significantly.
+The `builder-base`, `dev` and `build` stages have been separated from the `release` stage, which is based on a lightweight [nginx image](https://hub.docker.com/_/nginx). This way, the final image will not contain any of the Rust toolchain or development server, which reduces the size of the released image significantly and makes starting the application instantaneous.
 
 You will only need to make changes in the `builder-base` and `dev` stages, which the `build` and `release` stages depend on. If you have a working Dockerfile from the previous steps, you will only need to move the existing instructions to the correct stages to complete this final modification to the Dockerfile.
 
@@ -323,7 +322,7 @@ The word list typically used in the Sanuli game is a Finnish word list provided 
 At the time of writing, the word list is licensed under the [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/deed.fi) license. See [kotus.fi](https://kotus.fi/sanakirjat/kielitoimiston-sanakirja/nykysuomen-sana-aineistot/nykysuomen-sanalista/) for up-to-date information.
 
 
-## About the exercise
+### About the exercise
 
 This exercise has been created by Teemu Havulinna and is licensed under the [Creative Commons BY-NC-SA license](https://creativecommons.org/licenses/by-nc-sa/4.0/).
 
