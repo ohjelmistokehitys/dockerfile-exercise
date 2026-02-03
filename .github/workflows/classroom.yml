@@ -38,15 +38,15 @@ jobs:
         comparison-method: contains
         timeout: 3
         max-score: 15
-    - name: Commands in Dockerfile (trunk)
-      id: commands-in-dockerfile-trunk
+    - name: Commands in Dockerfile (expose)
+      id: commands-in-dockerfile-expose
       uses: classroom-resources/autograding-io-grader@v1
       with:
-        test-name: Commands in Dockerfile (trunk)
+        test-name: Commands in Dockerfile (expose)
         setup-command: docker build --check .
         command: cat Dockerfile | tr -cd '[:print:]\n'
         input: ''
-        expected-output: trunk
+        expected-output: EXPOSE
         comparison-method: contains
         timeout: 3
         max-score: 15
@@ -82,9 +82,9 @@ jobs:
       env:
         COMMANDS-IN-DOCKERFILE-RUSTUP_RESULTS: "${{steps.commands-in-dockerfile-rustup.outputs.result}}"
         COMMANDS-IN-DOCKERFILE-CARGO_RESULTS: "${{steps.commands-in-dockerfile-cargo.outputs.result}}"
-        COMMANDS-IN-DOCKERFILE-TRUNK_RESULTS: "${{steps.commands-in-dockerfile-trunk.outputs.result}}"
+        COMMANDS-IN-DOCKERFILE-EXPOSE_RESULTS: "${{steps.commands-in-dockerfile-expose.outputs.result}}"
         IGNORING-FILES_RESULTS: "${{steps.ignoring-files.outputs.result}}"
         MULTI-STAGE-BUILD-DEV_RESULTS: "${{steps.multi-stage-build-dev.outputs.result}}"
         MULTI-STAGE-BUILD-RELEASE_RESULTS: "${{steps.multi-stage-build-release.outputs.result}}"
       with:
-        runners: commands-in-dockerfile-rustup,commands-in-dockerfile-cargo,commands-in-dockerfile-trunk,ignoring-files,multi-stage-build-dev,multi-stage-build-release
+        runners: commands-in-dockerfile-rustup,commands-in-dockerfile-cargo,commands-in-dockerfile-expose,ignoring-files,multi-stage-build-dev,multi-stage-build-release
