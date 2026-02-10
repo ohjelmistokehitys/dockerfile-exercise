@@ -19,8 +19,10 @@ curl --silent --show-error $URL |
     grep -E '^[a-zA-Z]{5}$' |
 
     # convert to uppercase and save to file
-    tr '[:lower:]' '[:upper:]' > full-words.txt
+    tr '[:lower:]' '[:upper:]' |
 
+    # remove duplicates and save the output in full-words.txt
+    uniq > full-words.txt
 
 # check if the command succeeded to create the file
 if [ ! -s full-words.txt ]; then
