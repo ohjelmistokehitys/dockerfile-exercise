@@ -19,6 +19,8 @@ If you see a list of Docker commands and options, you are ready to proceed. If n
 
 > [!NOTE]
 > We recommend using a [GitHub Codespace](https://github.com/features/codespaces) or a [local development container](https://code.visualstudio.com/docs/devcontainers/containers) to complete this exercise. Local development containers may require additional configuration and setup, as they technically run Docker commands inside a Docker container. A GitHub Codespace will provide a ready-to-use environment with Docker pre-installed, which can save you time and effort.
+>
+> This project requires more resources than the default Codespace configuration. We recommend using 4 CPUs and 16 GB of RAM to avoid crashes and performance issues. These settings have also been configured in the [`.devcontainer/devcontainer.json` file](./.devcontainer/devcontainer.json), so they are applied automatically when you open the project in a Codespace.
 
 
 ## Sanuli
@@ -40,8 +42,7 @@ git submodule init      # initialize the submodule
 git submodule update    # fetch the latest code from the submodule repository
 ```
 
-> [!IMPORTANT]
-> You will not need to make any changes in the Sanuli code. Reading the [Sanuli readme file](https://github.com/Cadiac/sanuli/blob/master/README.md) is enough to understand how to build and run the application. There are also instructions on how to prepare the word lists that the game uses, which we will cover later in the exercise.
+You will not need to make any changes in the Sanuli code. Reading the [Sanuli readme file](https://github.com/Cadiac/sanuli/blob/master/README.md) is enough to understand how to build and run the application. There are also instructions on how to prepare the word lists that the game uses, which we will cover later in the exercise.
 
 If you want to learn more about Git submodules, we recommend watching the video [Git Submodules Tutorial (YouTube)](https://youtu.be/gSlXo2iLBro?si=Q_srt86bHf767323) or reading the [Git documentation on submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules). However, the two commands above are all you need in this exercise.
 
@@ -83,7 +84,20 @@ cat README.md
 
 Follow the quick start instructions from the [Sanuli readme file](https://github.com/Cadiac/sanuli/blob/master/README.md) to get the application running.
 
-Now, you can try to get the Sanuli application running manually, following the quick start instructions. If you encounter any issues, it is recommended to resolve them before automating the process with a Dockerfile. You can stop the container by pressing `Ctrl+C` in the terminal, and you can remove it with the command:
+Now, you can try to get the Sanuli application running manually, following the quick start instructions.
+
+> [!NOTE]
+> One important note is that the development server listens only to the localhost interface by default, which means that the app is only accessible from the container itself. To allow connections from your host system (your browser), you need to specify the `--address` option when running the `trunk serve` command:
+>
+> ```bash
+> # listens to all interfaces
+> trunk serve --address 0.0.0.0
+> ```
+>
+> You will likely encounter a few warnigns related to unused variables or unexpected conditions. These warnings are not errors, and they do not prevent the application from running.
+
+
+If you encounter any other issues, it is recommended to resolve them before automating the process with a Dockerfile. You can stop the container by pressing `Ctrl+C` in the terminal, and you can remove it with the command:
 
 ```bash
 docker rm sanuli-sandbox
@@ -104,15 +118,11 @@ The [Sanuli readme file](https://github.com/Cadiac/sanuli/blob/master/README.md)
 * [`cargo` for package management](https://doc.rust-lang.org/cargo/).
 * Sanuli also uses the [`trunk` web application bundler](https://github.com/trunk-rs/trunk), which is installed with `cargo`.
 
-> [!IMPORTANT]
-> Note that you don't need to install Rust or any of these tools, as the base image already contains them. However, the repository does not contain word lists, which we will cover later in the exercise.
+You don't need to install Rust or any of these tools, as the base image already contains them. However, the repository does not contain word lists, which we will cover later in the exercise.
 
 To complete this part of the exercise, you will need to read the "quick start" instructions from the [readme file](https://github.com/Cadiac/sanuli/blob/master/README.md) and apply them in your Dockerfile. You will need to utilize the [`WORKDIR`, `COPY`, `RUN`, `EXPOSE` and `CMD` instructions](https://docs.docker.com/reference/dockerfile/), which are described in every Docker tutorial, and they are typically used very similarly regardless of the technology being used. Copying source code into the image, installing dependencies and building applications is very similar regardless of whether you are using Rust, Node.js, React, Java or any other technology.
 
 We recommend referring to the [Dockerfile reference documentation](https://docs.docker.com/reference/dockerfile/) for a detailed explanation of each instruction. Consider when each instruction should be executed. For example, installing tools and dependencies should happen in the build phase using `RUN` instructions, while starting the development server should be done in the run phase using `CMD` (or `ENTRYPOINT`) instructions.
-
-> [!NOTE]
-> Starting the application is likely produce a few warnings related to unused variables or unexpected conditions. These warnings are not errors, and they do not prevent the application from running.
 
 
 ### Adding word lists
@@ -155,7 +165,7 @@ CMD ["trunk", "serve", "--address", "0.0.0.0"]
 ```
 
 > [!NOTE]
-> This step is only required for the development server. In production, the application will be served by a separate web server, which will listen to all interfaces by default. This will be covered later in the "multi stage" section of the exercise.
+> This setup is only required for the development server. In production, the application will be served by a separate web server, which will listen to all interfaces by default. This will be covered later in the "multi stage" section of the exercise.
 
 
 ## Step 3: Building the Docker image
@@ -167,8 +177,7 @@ Once you have completed some of the instructions in the Dockerfile, you can try 
 docker build --tag sanuli .
 ```
 
-> [!NOTE]
-> The first time you install the dependencies in the build phase, it can take a very long time. However, [Docker caches the layers of the image](https://docs.docker.com/build/cache/), so subsequent builds will be faster. It is a good practice to organize the instructions in the Dockerfile so that the layers that change less frequently or are slower to execute are placed earlier in the file.
+The first time you install the dependencies in the build phase, it can take a very long time. However, [Docker caches the layers of the image](https://docs.docker.com/build/cache/), so subsequent builds will be faster. It is a good practice to organize the instructions in the Dockerfile so that the layers that change less frequently or are slower to execute are placed earlier in the file.
 
 
 ## Step 4: Running the containerized application
@@ -195,10 +204,9 @@ The container seems to be running nicely, but there are some files in there that
 
 Your task is to create a `.dockerignore` file to specify which files and directories should be ignored when building the Docker image. Add a new `.dockerignore` file alongside your Dockerfile and add specify the `README.md` file and the `.git` directory in it. Then add and commit your changes to the repository.
 
-> [!NOTE]
-> As the *README.md* file is in the subfolder, you can't just write the name `README.md` in the `.dockerignore` file. There are many ways you can refer to the file, either with a specific path (`path/to/file`) or a pattern (`**/file`). See the [Docker documentation on .dockerignore files](https://docs.docker.com/build/concepts/context/#dockerignore-files) for options on how to exclude files.
->
-> Also, note that these exercise instructions are in the root `readme.md` file, which is different from the `README.md` file in the *sanuli* subfolder.
+As the *README.md* file is in the subfolder, you can't just write the name `README.md` in the `.dockerignore` file. There are many ways you can refer to the file, either with a specific path (`path/to/file`) or a pattern (`**/file`). See the [Docker documentation on .dockerignore files](https://docs.docker.com/build/concepts/context/#dockerignore-files) for options on how to exclude files.
+
+Also, note that these exercise instructions are in the root `readme.md` file, which is different from the `README.md` file in the *sanuli* subfolder.
 
 
 ## Step 6: multi stage Dockerfile
@@ -207,16 +215,9 @@ As you have likely noticed at this point, building the Sanuli application requir
 
 **Development vs. production build**
 
-To this point, we have been utilizing Rust development tools and the Trunk development server, but in production, none of these tools will be required. When publishing the app, only the compiled source code and static files (word lists, images etc.) are needed. All of these can be served to the clients as static files.
+To this point, we have been utilizing Rust development tools and the Trunk development server, but in production, none of these tools will be required. When publishing the app, only the compiled source code and static files (word lists, images etc.) are needed. All of these can be served to the clients as static files. Refer to the Sanuli readme section for ["Release build"](https://github.com/Cadiac/sanuli#release-build), which explains the single command, that produces a small production package of the application.
 
 The size of our production image should therefore be measured in megabytes, not gigabytes. To reduce the size, we can use [multi-stage builds](https://docs.docker.com/build/building/multi-stage/) in the Dockerfile.
-
-Refer to the Sanuli readme section for "Release build", which explains the single command, that produces a small production package of the application. Below, we have split the build step into a separate environment setup and a build command, which you can utilize in your Dockerfile:
-
-```dockerfile
-ENV RUSTFLAGS="--cfg=web_sys_unstable_apis --remap-path-prefix \$HOME=~"
-RUN trunk build --release
-```
 
 **Multi-stage build**
 
