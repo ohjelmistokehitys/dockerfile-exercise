@@ -4,14 +4,31 @@ This exercise will guide you through the process of containerizing a web applica
 
 We assume that you have completed previous exercises in this course and are familiar with basic concepts of Docker. This exercise itself is *not a tutorial*, but an exercise, where you are expected to apply the knowledge from other tutorials and documentation. You need to do your own research and read the documentation to complete the tasks. Discussing the tasks with your peers and instructors is highly encouraged.
 
-The [Docker workshop (docker.com)](https://docs.docker.com/get-started/workshop/) provides a good introduction to Dockerfiles and how to use them. The blog post [How to Dockerize a React App (docker.com)](https://www.docker.com/blog/how-to-dockerize-react-app/) provides a very similar example, but for a React application. Although the technologies are different, the concepts and instructions are very similar, so you can apply the knowledge from that post to this exercise as well.
+The [Docker introduction (docker.com)](https://docs.docker.com/get-started/introduction/) provides a good introduction to Dockerfiles and how to use them. The blog post [How to Dockerize a React App (docker.com)](https://www.docker.com/blog/how-to-dockerize-react-app/) provides a very similar example, but for a React application. Although the technologies are different, the concepts and instructions are very similar, so you can apply the knowledge from that post to this exercise as well.
+
+
+## Prerequisites
+
+Before starting this exercise, you should have Docker either installed on your system or be using a cloud service that provides a Docker runtime environment. The default [GitHub Codespace](https://github.com/features/codespaces) environment comes with Docker pre-installed, which can be a very convenient solution. Verify that you can run the `docker` command in your terminal. You can check this by running the following command:
+
+```bash
+docker --help
+```
+
+If you see a list of Docker commands and options, you are ready to proceed. If not, please refer to the [Docker installation guide](https://docs.docker.com/get-docker/) for instructions on how to install Docker on your system or use a cloud service.
+
+> [!NOTE]
+> We recommend using a [GitHub Codespace](https://github.com/features/codespaces) or a [local development container](https://code.visualstudio.com/docs/devcontainers/containers) to complete this exercise. Local development containers may require additional configuration and setup, as they technically run Docker commands inside a Docker container. A GitHub Codespace will provide a ready-to-use environment with Docker pre-installed, which can save you time and effort.
 
 
 ## Sanuli
 
-The application to be containerized this exercise is Sanuli, *"A finnish version of a popular word guessing game implemented in Rust."* [(Sanuli at GitHub)](https://github.com/Cadiac/sanuli) You can play the game online at [sanuli.fi](https://sanuli.fi/).
+The application to be containerized this exercise is Sanuli, *"a finnish version of a popular word guessing game implemented in Rust."* [(Sanuli at GitHub)](https://github.com/Cadiac/sanuli) You can play the game online at [sanuli.fi](https://sanuli.fi/). We will not be modifying the application itself, but rather focus on creating a Dockerfile to build and run the application in a containerized environment.
 
-Although the game is [written in Rust](https://www.rust-lang.org/), **you do not need to know Rust nor install any Rust tools in your host system**. Instead, you will use [the Rust base image for Docker](https://hub.docker.com/_/rust) that contains the necessary tools to build and run the application.
+> [!IMPORTANT]
+> Although the game is [written in Rust](https://www.rust-lang.org/), **you do not need to know Rust nor install any Rust tools in your host system**.
+>
+> Instead, you will use [the Rust base image for Docker](https://hub.docker.com/_/rust) that contains the necessary tools to build and run the application. We will cover this in more detail later in the exercise.
 
 
 ## The Sanuli *submodule*
@@ -23,7 +40,8 @@ git submodule init      # initialize the submodule
 git submodule update    # fetch the latest code from the submodule repository
 ```
 
-**You will not need to make any changes in the Sanuli code**. Reading the [Sanuli readme file](https://github.com/Cadiac/sanuli/blob/master/README.md) is enough to understand how to build and run the application. There are also instructions on how to prepare the word lists that the game uses, which we will cover later in the exercise.
+> [!IMPORTANT]
+> You will not need to make any changes in the Sanuli code. Reading the [Sanuli readme file](https://github.com/Cadiac/sanuli/blob/master/README.md) is enough to understand how to build and run the application. There are also instructions on how to prepare the word lists that the game uses, which we will cover later in the exercise.
 
 If you want to learn more about Git submodules, we recommend watching the video [Git Submodules Tutorial (YouTube)](https://youtu.be/gSlXo2iLBro?si=Q_srt86bHf767323) or reading the [Git documentation on submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules). However, the two commands above are all you need in this exercise.
 
