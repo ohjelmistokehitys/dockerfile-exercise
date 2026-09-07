@@ -4,17 +4,12 @@ FROM rust:latest
 # We recommend using /sanuli as the working directory:
 WORKDIR /sanuli
 
-# TODO: copy the sanuli submodule to the /sanuli directory
+# TODO: copy the sanuli source code to the /sanuli directory
 
-# Copy the script for fetching words and populate word lists:
-COPY fetch-words.sh ./
-RUN chmod +x fetch-words.sh
-RUN ./fetch-words.sh
+# TODO: copy the script for fetching words and populate word lists
 
 # TODO: follow the quick start instructions of Sanuli readme
 
 # TODO: expose the development server port
 
-# Run the `trunk` development server, and accept connections
-# from outside the container:
-CMD ["trunk", "serve", "--address", "0.0.0.0"]
+# TODO: run the `trunk` development server (accept connections from outside the container)
