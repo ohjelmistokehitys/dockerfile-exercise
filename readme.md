@@ -244,7 +244,7 @@ flowchart TD
         release["release \n nginx:alpine"] --> prodserver([🌍 0.0.0.0:80])
     end
 
-    artifact -->|copy to /sanuli/dist| release
+    artifact -->|copy /sanuli/dist| release
 ```
 
 The first stages, `builder-base` and `dev`, are the ones that correspond to the previous parts of the exercise, which you have already completed. The new stages, `build` and `release`, first build the production artifacts (html, css, js and other static files) and then serve them using a lightweight [nginx image](https://hub.docker.com/_/nginx). Note that the `release` stage does not include any of the Rust tools nor the development server. This is the key to reducing the size of the final image to just megabytes and to starting the production server in an instant.
